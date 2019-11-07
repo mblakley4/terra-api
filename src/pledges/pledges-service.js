@@ -2,7 +2,7 @@ const PledgesService = {
   getAllPledges(knex) {
     return knex.select('*').from('terra_pledges')
   },
-  insertFolder(knex, newPledge) {
+  insertPledge(knex, newPledge) {
     return knex
       .insert(newPledge)
       .into('terra_pledges')
