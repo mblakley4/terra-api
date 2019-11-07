@@ -71,5 +71,28 @@ pledgesRouter
   .get((req, res, next) => {
     res.json(serializePledge(res.pledge))
   })
+  .patch(jsonParser, (req, res, next) => {
+    const { likes } = req.body
+    const pledgeToUpdate = { likes }
+
+    const numberOfValues = Object.values(pledgeToUpdate).filter(Boolean).length
+    if (numberOfValues === 0) {
+      return res.status(400).json({
+        error: {
+          message: `Request body must contain 'likes'`
+        }
+      })
+    }
+
+    PledgesService.updatePledge(
+      req.app.get('db'),
+      req.params.pledge_id,
+      pledgeToUpdate
+    )
+    .then(numRowsAffected => {
+      res.status(204).end()
+    })
+    .catch(next)
+  })
 
 module.exports = pledgesRouter

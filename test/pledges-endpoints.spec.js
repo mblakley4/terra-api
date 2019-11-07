@@ -71,7 +71,7 @@ describe('Pledges Endpoints', function() {
 
     it(`creates a pledge, responding with 201 and the new pledge`, () => {
       const newPledge = {
-        name: 'Text Name',
+        name: 'Test Name',
         location: 'Test Location',
         days: 99
       }
@@ -97,7 +97,7 @@ describe('Pledges Endpoints', function() {
 
     requiredFields.forEach(field => {
       const newPledge = {
-        name: 'Text Name',
+        name: 'Test Name',
         location: 'Test Location',
         days: 99
       }
@@ -176,5 +176,61 @@ describe('Pledges Endpoints', function() {
           })
       })
     })
+  })
+
+  describe(`PATCH /api/pledges/:pledge_id`, () => {
+    context(`Given no pledges`, () => {
+      it(`responds with 404`, () => {
+        const pledgeId = 123456
+        return supertest(app)
+          .get(`/api/pledges/${pledgeId}`)
+          .expect(404, { error: { message: `Pledge doesn't exist` } })
+      })
+    })
+
+    context('Given there are pledges in the database', () => {
+      const testPledges = makePledgesArray()
+
+      beforeEach('insert pledges', () => {
+        return db
+          .into('terra_pledges')
+          .insert(testPledges)
+      })
+
+      it('responds with 204 and updates the pledge', () => {
+        const idToUpdate = 2
+        const updatePledge = {
+          likes: 4
+        }
+
+        const expectedPledge = {
+          ...testPledges[idToUpdate - 1],
+          ...updatePledge
+        }
+
+        return supertest(app)
+          .patch(`/api/pledges/${idToUpdate}`)
+          .send(updatePledge)
+          .expect(204)
+          .then(res =>
+            supertest(app)
+              .get(`/api/pledges/${idToUpdate}`)
+              .expect(expectedPledge)
+          )
+      })
+
+      it(`responds with 400 when no required fields supplied`, () => {
+        const idToUpdate = 2
+        return supertest(app)
+          .patch(`/api/pledges/${idToUpdate}`)
+          .send({ irrelevantField: 'foo' })
+          .expect(400, {
+            error: {
+              message: `Request body must contain 'likes'`
+            }
+          })
+      })
+    })
+
   })
 })
